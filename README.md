@@ -101,6 +101,12 @@ Todo entities expose these state attributes for content-change detection:
 - `items_signature`: a SHA256 hash of current item names and completion states.
 - `items_signature_raw`: the normalized source string used to build the hash.
 
+Only `items_signature` is kept in Home Assistant's history. The attributes that
+list the items themselves, `items_signature_raw` and `items_by_category`, along
+with `items_by_category_signature`, are left out of the recorder, because they
+repeat the whole list on every change and exceed the recorder's size limit on
+long lists.
+
 ### List Setting Entities
 
 Each shopping list device has two select entities that mirror settings from the AnyList app:

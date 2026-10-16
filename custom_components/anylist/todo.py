@@ -95,6 +95,12 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
 
     # The list is the main feature of its device and takes the device name.
     _attr_name = None
+    # These repeat every item on the list, crossed off ones included, and grow
+    # past the recorder's attribute size limit on long lists. Only the hash
+    # stays in history.
+    _unrecorded_attributes = frozenset(
+        {"items_signature_raw", "items_by_category", "items_by_category_signature"}
+    )
 
     def __init__(
         self,
