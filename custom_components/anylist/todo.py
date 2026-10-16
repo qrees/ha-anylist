@@ -101,7 +101,17 @@ def _ordered_items(shopping_list: Any) -> list[Any]:
 class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
     """An AnyList shopping list as a Home Assistant todo entity."""
 
-    _unrecorded_attributes = frozenset({"available_categories"})
+    # The category catalog, and the attributes that repeat every item on the
+    # list (crossed off ones included), grow past the recorder's attribute size
+    # limit on long lists. Only the items hash stays in history.
+    _unrecorded_attributes = frozenset(
+        {
+            "available_categories",
+            "items_signature_raw",
+            "items_by_category",
+            "items_by_category_signature",
+        }
+    )
 
     # The list is the main feature of its device and takes the device name.
     _attr_name = None

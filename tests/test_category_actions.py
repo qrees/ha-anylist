@@ -207,7 +207,7 @@ async def test_discovery_is_fresh_and_attribute_includes_empty_categories(
     )
     recorder_exclusions = hass.states.get(ENTITY).state_info["unrecorded_attributes"]
     assert "available_categories" in recorder_exclusions
-    assert "items_by_category" not in recorder_exclusions
+    assert "items_by_category" in recorder_exclusions
     category_client.lists[0].categories[1].name = "Renamed in app"
     fresh = (await call(hass, "get_categories", category_set_id="set-a"))[ENTITY]
     assert fresh["category_names"] == ["Dairy", "Renamed in app", "Other"]

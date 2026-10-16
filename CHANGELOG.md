@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Keep the todo attributes that list every item (`items_signature_raw`,
+  `items_by_category`, `items_by_category_signature`) out of the recorder. On
+  long lists they exceeded its attribute size limit, which logged a warning and
+  dropped all of the entity's attributes from history. `items_signature` is
+  still recorded, and `available_categories` stays unrecorded.
+
 ## 0.13.0 - 2026-11-11
 
 - Replace repeated full-account downloads with conditional shopping-list,

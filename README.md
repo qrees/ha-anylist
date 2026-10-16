@@ -106,6 +106,12 @@ including empty categories, with its ID, name, match ID, category set ID and
 name, and item counts. It updates with the list's normal refresh. Use
 `anylist.get_categories` when an automation needs a fresh catalog or set details.
 
+Only `items_signature` is kept in Home Assistant's history. The attributes that
+list the items themselves, `items_signature_raw` and `items_by_category`, along
+with `items_by_category_signature`, are left out of the recorder, because they
+repeat the whole list on every change and exceed the recorder's size limit on
+long lists. `available_categories` is left out as well.
+
 ### List Setting Entities
 
 Each shopping list device has two select entities that mirror settings from the AnyList app:
