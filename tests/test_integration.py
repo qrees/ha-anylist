@@ -128,7 +128,13 @@ async def test_setup_entry_creates_todo_entity_and_unloads(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.client is client
-    assert hass.states.get("todo.anylist_groceries") is not None
+    state = hass.states.get("todo.anylist_groceries")
+    assert state is not None
+    assert state.state_info["unrecorded_attributes"] == {
+        "items_signature_raw",
+        "items_by_category",
+        "items_by_category_signature",
+    }
     assert client.calls.count(("get_lists_and_favourites", ())) == 1
     assert ("get_lists", ()) not in client.calls
     assert ("get_favourites", ()) not in client.calls

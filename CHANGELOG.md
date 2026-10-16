@@ -14,6 +14,11 @@
 - Fix a later change in a quick series taking about 10 seconds to appear in
   Home Assistant, and re-adding an item right after checking it off
   creating a duplicate instead of unchecking it.
+- Keep the todo attributes that list every item (`items_signature_raw`,
+  `items_by_category`, `items_by_category_signature`) out of the recorder. On
+  long lists they exceeded its attribute size limit, which logged a warning and
+  dropped all of the entity's attributes from history. `items_signature` is
+  still recorded.
 
 ## 0.8.0 - 2026-10-02
 
