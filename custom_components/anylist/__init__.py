@@ -485,38 +485,28 @@ async def _async_fetch_data_stages(
     hass: HomeAssistant,
     client: Any,
 ) -> dict[str, Any]:
-    """Fetch AnyList data with stage-level logging and errors."""
+    """Fetch AnyList data with stage-level logging and errors.
+
+    Lists and favourites come from the same user data download, so one
+    request serves both.
+    """
     try:
-        _LOGGER.debug("Fetching AnyList lists")
-        lists = await async_call_with_timeout(
+        _LOGGER.debug("Fetching AnyList lists and favourites")
+        lists, favourites = await async_call_with_timeout(
             hass,
-            client.get_lists,
+            client.get_lists_and_favourites,
             timeout=ANYLIST_REQUEST_TIMEOUT,
         )
     except AnyListTimeoutError as err:
-        raise UpdateFailed("Timed out fetching AnyList lists") from err
+        raise UpdateFailed("Timed out fetching AnyList data") from err
     except Exception as err:
         if _is_auth_error(err):
             raise ConfigEntryAuthFailed("AnyList authentication failed") from err
-        raise UpdateFailed(f"Error fetching AnyList lists: {err}") from err
+        raise UpdateFailed(f"Error fetching AnyList data: {err}") from err
 
-    _LOGGER.debug("Fetched %s AnyList list(s)", len(lists))
-
-    try:
-        _LOGGER.debug("Fetching AnyList favourites")
-        favourites = await async_call_with_timeout(
-            hass,
-            client.get_favourites,
-            timeout=ANYLIST_REQUEST_TIMEOUT,
-        )
-    except AnyListTimeoutError as err:
-        raise UpdateFailed("Timed out fetching AnyList favourites") from err
-    except Exception as err:
-        if _is_auth_error(err):
-            raise ConfigEntryAuthFailed("AnyList authentication failed") from err
-        raise UpdateFailed(f"Error fetching AnyList favourites: {err}") from err
-
-    _LOGGER.debug("Fetched %s AnyList favourite(s)", len(favourites))
+    _LOGGER.debug(
+        "Fetched %s AnyList list(s) and %s favourite(s)", len(lists), len(favourites)
+    )
     _LOGGER.debug("AnyList data fetch complete")
     return {
         "lists": lists,

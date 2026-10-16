@@ -183,6 +183,24 @@ def test_client_parses_user_data() -> None:
     assert client.user_id() == "user-1"
 
 
+def test_client_gets_lists_and_favourites_from_one_download() -> None:
+    """Test lists and favourites are parsed from a single user data request."""
+    client = _client()
+    downloads: list[None] = []
+
+    def get_user_data() -> bytes:
+        downloads.append(None)
+        return _shopping_user_data() + _favourites_user_data()
+
+    client.get_user_data = get_user_data
+
+    lists, favourites = client.get_lists_and_favourites()
+
+    assert len(downloads) == 1
+    assert [shopping_list.id for shopping_list in lists] == ["list-1"]
+    assert [favourite.name for favourite in favourites] == ["Milk"]
+
+
 def test_client_missing_user_data_sections_return_empty() -> None:
     """Test absent user data sections return empty lists."""
     client = _client()
@@ -190,6 +208,7 @@ def test_client_missing_user_data_sections_return_empty() -> None:
 
     assert client.get_lists() == []
     assert client.get_favourites_lists() == []
+    assert client.get_lists_and_favourites() == ([], [])
     assert client.get_recipes() == []
     with pytest.raises(client_module.AnyListNotFoundError):
         client.get_list_by_id("missing")

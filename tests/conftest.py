@@ -66,6 +66,11 @@ class FakeAnyListClient:
         self.calls.append(("get_favourites", ()))
         return self.favourites
 
+    def get_lists_and_favourites(self) -> tuple[list[Any], list[Any]]:
+        """Return fake shopping lists and favourites."""
+        self.calls.append(("get_lists_and_favourites", ()))
+        return self.lists, self.favourites
+
     def enable_icalendar(self) -> Any:
         """Return a fake iCalendar URL."""
         self.calls.append(("enable_icalendar", ()))

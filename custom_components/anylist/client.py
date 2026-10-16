@@ -564,6 +564,14 @@ def _parse_user_data_lists(data: bytes) -> list[ShoppingList]:
     return shopping_lists
 
 
+def _parse_user_data_favourites_lists(data: bytes) -> list[FavouritesList]:
+    """Parse the favourites lists in a PBUserDataResponse."""
+    raw_response = _first_value(_parse_fields(data), 7)
+    if not isinstance(raw_response, bytes):
+        return []
+    return _parse_favourites_lists_response(raw_response)
+
+
 def _parse_shopping_lists_response(data: bytes) -> list[ShoppingList]:
     """Parse a PBShoppingListsResponse."""
     fields = _parse_fields(data)
@@ -1064,6 +1072,20 @@ class AnyListClient:
                 return shopping_list
         raise AnyListNotFoundError(f"AnyList shopping list '{name}' was not found")
 
+    def get_lists_and_favourites(
+        self,
+    ) -> tuple[list[ShoppingList], list[FavouriteItem]]:
+        """Get all shopping lists and favourite items from one user data download."""
+        data = self.get_user_data()
+        return (
+            _parse_user_data_lists(data),
+            [
+                item
+                for favourites_list in _parse_user_data_favourites_lists(data)
+                for item in favourites_list.items
+            ],
+        )
+
     def get_favourites(self) -> list[FavouriteItem]:
         """Get all favourite items."""
         return [
@@ -1074,12 +1096,7 @@ class AnyListClient:
 
     def get_favourites_lists(self) -> list[FavouritesList]:
         """Get all favourites lists."""
-        data = self.get_user_data()
-        fields = _parse_fields(data)
-        raw_response = _first_value(fields, 7)
-        if not isinstance(raw_response, bytes):
-            return []
-        return _parse_favourites_lists_response(raw_response)
+        return _parse_user_data_favourites_lists(self.get_user_data())
 
     def get_recipes(self) -> list[Recipe]:
         """Get all recipes."""

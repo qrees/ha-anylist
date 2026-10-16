@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Download the AnyList account data once per refresh instead of twice. Lists
+  and favourites were fetched separately, but both come from the same
+  response, so every poll and every refresh after a change downloaded the
+  whole account two times.
+
 ## 0.8.0 - 2026-10-02
 
 - Honour the list's **Insert New Items** setting when Home Assistant adds an
