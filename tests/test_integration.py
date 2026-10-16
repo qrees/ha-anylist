@@ -233,8 +233,7 @@ async def test_poll_interval_options_reload_and_refresh(hass: HomeAssistant) -> 
             {"entity_id": "todo.anylist_groceries", "item": "Apples"},
             blocking=True,
         )
-        assert ("add_item", ("list-1", "Apples")) in client.calls
-        assert ("get_lists_and_favourites", ()) in client.calls
+        assert client.calls == [("add_item", ("list-1", "Apples"))]
 
         client.calls.clear()
         await hass.services.async_call(
@@ -437,7 +436,15 @@ async def test_todo_entity_items_and_mutations(hass: HomeAssistant) -> None:
     assert ("cross_off_item", ("list-1", "item-1")) in client.calls
     assert ("uncheck_item", ("list-1", "item-1")) in client.calls
     assert ("bulk_delete_items", ("list-1", ["item-1"])) in client.calls
-    assert coordinator.refresh_count == 6
+    # Each write is shown locally instead of waiting for a refresh.
+    assert coordinator.local_change_count == 6
+    assert coordinator.refresh_count == 0
+    # The fake client gives every added item the id "new-item".
+    assert [(item.uid, item.status) for item in entity.todo_items] == [
+        ("item-checked", TodoItemStatus.NEEDS_ACTION),
+        ("new-item", TodoItemStatus.NEEDS_ACTION),
+        ("new-item", TodoItemStatus.NEEDS_ACTION),
+    ]
 
     coordinator.data["lists"][0].items.append(fake_item("blank", "   "))
     coordinator.data["lists"].append(fake_list("list-2", "Hardware Store"))

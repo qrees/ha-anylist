@@ -400,15 +400,20 @@ async def test_todo_update_renames_items(hass: HomeAssistant) -> None:
         TodoItem(summary="Oat milk", uid="item-1", status=TodoItemStatus.NEEDS_ACTION)
     )
     assert client.calls == [("rename_item", ("list-1", "item-1", "Oat milk", "Milk"))]
-    assert coordinator.refresh_count == 1
+    # Home Assistant shows the new name without waiting for a refresh.
+    assert coordinator.refresh_count == 0
+    assert [item.summary for item in entity.todo_items] == ["Oat milk"]
 
     client.calls.clear()
     await entity.async_update_todo_item(
-        TodoItem(summary="Oat milk", uid="item-1", status=TodoItemStatus.COMPLETED)
+        TodoItem(summary="Soy milk", uid="item-1", status=TodoItemStatus.COMPLETED)
     )
     assert client.calls == [
-        ("rename_item", ("list-1", "item-1", "Oat milk", "Milk")),
+        ("rename_item", ("list-1", "item-1", "Soy milk", "Oat milk")),
         ("cross_off_item", ("list-1", "item-1")),
+    ]
+    assert [(item.summary, item.status) for item in entity.todo_items] == [
+        ("Soy milk", TodoItemStatus.COMPLETED)
     ]
 
     client.calls.clear()
@@ -429,7 +434,8 @@ async def test_todo_move_item(hass: HomeAssistant) -> None:
         ("move_item", ("list-1", "item-2", "item-1")),
         ("move_item", ("list-1", "item-2", None)),
     ]
-    assert coordinator.refresh_count == 2
+    assert coordinator.local_change_count == 2
+    assert coordinator.refresh_count == 0
 
     def _raise_error(*args: object) -> None:
         raise RuntimeError("offline")

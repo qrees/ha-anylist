@@ -23,7 +23,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .client import (
     AnyListAuthError,
@@ -74,6 +74,7 @@ from .const import (
     SERVICE_SEARCH_RECIPES,
     SERVICE_UPDATE_RECIPE,
 )
+from .coordinator import AnyListCoordinator
 from .entity import account_device_info, selected_list_ids
 from .recipe_search import (
     DEFAULT_SEARCH_LIMIT,
@@ -93,7 +94,7 @@ class AnyListRuntimeData:
     """Runtime data for a loaded AnyList config entry."""
 
     client: AnyListClient
-    coordinator: DataUpdateCoordinator[dict[str, Any]]
+    coordinator: AnyListCoordinator
     icalendar_url: str | None
 
 
@@ -1013,9 +1014,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await _async_fetch_data(hass, client)
 
     poll_interval = get_poll_interval(entry)
-    coordinator = DataUpdateCoordinator(
+    coordinator = AnyListCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=timedelta(seconds=poll_interval),

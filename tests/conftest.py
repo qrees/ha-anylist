@@ -233,6 +233,7 @@ class FakeCoordinator:
         self.refresh_count = 0
         self.forced_refresh_count = 0
         self.request_refresh_count = 0
+        self.local_change_count = 0
         self._listeners: list[Any] = []
         self._refresh_error = refresh_error
 
@@ -244,6 +245,11 @@ class FakeCoordinator:
             self._listeners.remove(update_callback)
 
         return _remove_listener
+
+    def async_apply_local_change(self, change: Any) -> None:
+        """Apply a local change to the fake data."""
+        self.local_change_count += 1
+        change(self.data)
 
     async def async_request_refresh(self) -> None:
         """Record a refresh request."""

@@ -6,6 +6,14 @@
   and favourites were fetched separately, but both come from the same
   response, so every poll and every refresh after a change downloaded the
   whole account two times.
+- Show item changes made from Home Assistant right away instead of waiting
+  for a full refresh. Adding, checking off, renaming, moving and deleting
+  items now returns as soon as AnyList accepts the change (about 0.4 s,
+  previously several seconds on large lists for the first change), and one
+  refresh follows about 10 seconds after a burst of changes.
+- Fix a later change in a quick series taking about 10 seconds to appear in
+  Home Assistant, and re-adding an item right after checking it off
+  creating a duplicate instead of unchecking it.
 
 ## 0.8.0 - 2026-10-02
 

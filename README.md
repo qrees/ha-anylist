@@ -131,7 +131,7 @@ See [custom_components/anylist/services.yaml](custom_components/anylist/services
 
 ## Data Updates
 
-The integration uses Home Assistant's `DataUpdateCoordinator` and polls AnyList every 60 seconds by default. Set **Polling Interval** in the integration options to configure the polling interval to a custom value. Mutations such as adding, checking, deleting, or recipe-to-list actions request an immediate refresh after the AnyList operation completes.
+The integration uses Home Assistant's `DataUpdateCoordinator` and polls AnyList every 60 seconds by default. Set **Polling Interval** in the integration options to configure the polling interval to a custom value. Changes to list items made from Home Assistant (adding, checking off, renaming, moving, or deleting) show up as soon as AnyList accepts them, without waiting for a refresh. One refresh follows about 10 seconds after a burst of such changes. Recipe-to-list actions and list setting changes refresh right away.
 
 If AnyList is unavailable, entities are marked unavailable through the coordinator until the next successful refresh.
 
@@ -316,7 +316,7 @@ Confirm that the email and password work in the official AnyList app or website.
 
 ### Lists Do Not Update Immediately
 
-The integration polls AnyList every 60 seconds by default. Local mutations request a refresh immediately, but changes made in another AnyList client may take up to one polling interval to appear.
+The integration polls AnyList every 60 seconds by default. Changes made from Home Assistant show up immediately, but changes made in another AnyList client may take up to one polling interval to appear.
 
 ### Missing Shopping List
 

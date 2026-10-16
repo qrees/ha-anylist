@@ -16,8 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
 from .category import resolve_category_for_item
 from .client import (
     SORT_ORDER_ALPHABETICAL,
@@ -26,6 +24,14 @@ from .client import (
     inserts_new_items_at_top,
 )
 from .const import ANYLIST_REQUEST_TIMEOUT, DOMAIN
+from .coordinator import (
+    AnyListCoordinator,
+    add_item,
+    delete_items,
+    move_item,
+    rename_item,
+    set_item_checked,
+)
 from .entity import AnyListListEntity, find_shopping_list, selected_list_ids
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,7 +104,7 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: AnyListCoordinator,
         client,
         shopping_list,
         config_entry: ConfigEntry,
@@ -308,31 +314,33 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
                 self._list_id,
                 existing_item.uid,
             )
-        else:
-            category_resolution = resolve_category_for_item(
-                item.summary,
+            self.coordinator.async_apply_local_change(
+                set_item_checked(self._list_id, existing_item.uid, False)
+            )
+            return
+
+        category_resolution = resolve_category_for_item(
+            item.summary,
+            self._list_id,
+            self.coordinator.data.get("lists", []),
+            self.coordinator.data.get("favourites", []),
+        )
+
+        # Honour the list's "Insert New Items" setting like the AnyList app.
+        at_top = inserts_new_items_at_top(
+            find_shopping_list(self.coordinator, self._list_id)
+        )
+
+        if not item.description and category_resolution is None:
+            new_item = await self._async_call_client(
+                "create todo item",
+                self._client.add_item,
                 self._list_id,
-                self.coordinator.data.get("lists", []),
-                self.coordinator.data.get("favourites", []),
+                item.summary,
+                at_top,
             )
-
-            # Honour the list's "Insert New Items" setting like the AnyList app.
-            at_top = inserts_new_items_at_top(
-                find_shopping_list(self.coordinator, self._list_id)
-            )
-
-            if not item.description and category_resolution is None:
-                await self._async_call_client(
-                    "create todo item",
-                    self._client.add_item,
-                    self._list_id,
-                    item.summary,
-                    at_top,
-                )
-                await self.coordinator.async_request_refresh()
-                return
-
-            await self._async_call_client(
+        else:
+            new_item = await self._async_call_client(
                 "create todo item with details",
                 self._client.add_item_with_details,
                 self._list_id,
@@ -347,7 +355,9 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
                 ),
                 at_top,
             )
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_apply_local_change(
+            add_item(self._list_id, new_item, at_top)
+        )
 
     def _find_checked_item_by_name(self, name: str) -> TodoItem | None:
         """Find an existing checked-off item by name (case insensitive)."""
@@ -384,8 +394,10 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
                 item.summary,
                 current.summary,
             )
+            self.coordinator.async_apply_local_change(
+                rename_item(self._list_id, item.uid, item.summary)
+            )
             if item.status == current.status:
-                await self.coordinator.async_request_refresh()
                 return
 
         if item.status == TodoItemStatus.COMPLETED:
@@ -402,7 +414,11 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
                 self._list_id,
                 item.uid,
             )
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_apply_local_change(
+            set_item_checked(
+                self._list_id, item.uid, item.status == TodoItemStatus.COMPLETED
+            )
+        )
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the list."""
@@ -412,7 +428,7 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
             self._list_id,
             uids,
         )
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_apply_local_change(delete_items(self._list_id, uids))
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -425,13 +441,15 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
             uid,
             previous_uid,
         )
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_apply_local_change(
+            move_item(self._list_id, uid, previous_uid)
+        )
 
-    async def _async_call_client(self, action: str, func, *args) -> None:
+    async def _async_call_client(self, action: str, func, *args) -> Any:
         """Run a todo mutation with logging and timeout protection."""
         _LOGGER.debug("AnyList todo mutation started: %s", action)
         try:
-            await async_call_with_timeout(
+            result = await async_call_with_timeout(
                 self.hass,
                 func,
                 *args,
@@ -448,3 +466,4 @@ class AnyListTodoEntity(AnyListListEntity, TodoListEntity):
                 },
             ) from err
         _LOGGER.debug("AnyList todo mutation succeeded: %s", action)
+        return result
