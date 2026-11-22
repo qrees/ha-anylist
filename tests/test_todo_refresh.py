@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, STATE_UNAVAILABLE
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -237,4 +237,5 @@ async def test_failed_readback_does_not_report_a_successful_mutation(
     assert exc_info.value.translation_key == "refresh_failed"
     assert client._item("new-item").name == "Milk"
     assert not entry.runtime_data.coordinator.last_update_success
-    assert hass.states.get(TODO_ENTITY).state == STATE_UNAVAILABLE
+    # Within the stale-data grace the entity keeps the last data it read back.
+    assert hass.states.get(TODO_ENTITY).state == "0"

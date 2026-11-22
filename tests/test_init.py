@@ -32,7 +32,8 @@ def test_const_values():
     assert const.SERVICE_DELETE_RECIPE == "delete_recipe"
     assert const.ANYLIST_REQUEST_TIMEOUT == 15
     assert const.ANYLIST_LOGIN_TIMEOUT == 20
-    assert const.ANYLIST_REFRESH_TIMEOUT == 30
+    assert const.ANYLIST_LIST_DOWNLOAD_TIMEOUT == 60
+    assert const.ANYLIST_REFRESH_TIMEOUT == 75
     assert const.ANYLIST_DEFAULT_POLL_INTERVAL == 60
     assert const.ANYLIST_MIN_POLL_INTERVAL == 60
     assert const.ANYLIST_MAX_POLL_INTERVAL == 3600

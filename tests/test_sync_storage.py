@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, STATE_UNAVAILABLE
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -427,7 +427,9 @@ async def test_rate_limited_readback_does_not_report_stale_success(hass, monkeyp
         await _todo(hass, "add_item", item="Bread")
     assert not entry.runtime_data.coordinator.last_update_success
     assert entry.runtime_data.coordinator.last_exception.retry_after == 3600
-    assert hass.states.get("todo.anylist_groceries").state == STATE_UNAVAILABLE
+    # Within the stale-data grace the entity keeps the last data it read back,
+    # without the unconfirmed item; the failed readback was raised above.
+    assert hass.states.get("todo.anylist_groceries").state == "0"
     before = len(server.calls)
     with pytest.raises(wire.AnyListHTTPError):
         await hass.async_add_executor_job(entry.runtime_data.client.get_lists)

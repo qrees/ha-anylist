@@ -124,8 +124,15 @@ class AnyListListEntity(CoordinatorEntity):
 
     @property
     def available(self) -> bool:
-        """Return whether this shopping list is present in fresh coordinator data."""
-        return super().available and self.shopping_list is not None
+        """Return whether this shopping list is present in usable coordinator data.
+
+        Usable data survives a short run of failed refreshes; see
+        AnyListCoordinator.data_usable.
+        """
+        usable = getattr(
+            self.coordinator, "data_usable", self.coordinator.last_update_success
+        )
+        return usable and self.shopping_list is not None
 
     @callback
     def _handle_coordinator_update(self) -> None:

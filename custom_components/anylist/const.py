@@ -16,7 +16,10 @@ DATA_ICALENDAR_URL = "icalendar_url"
 # Update intervals
 ANYLIST_REQUEST_TIMEOUT = 15  # seconds
 ANYLIST_LOGIN_TIMEOUT = 20  # seconds
-ANYLIST_REFRESH_TIMEOUT = 30  # seconds
+# A shopping-list download is a few hundred KB when a long list has changed,
+# and AnyList sometimes sends it at ~50 KB/s, so allow well over 15 s.
+ANYLIST_LIST_DOWNLOAD_TIMEOUT = 60  # seconds
+ANYLIST_REFRESH_TIMEOUT = 75  # seconds, one list download plus margin
 ANYLIST_PHOTO_TIMEOUT = 65  # upload, token refresh, and image processing
 ANYLIST_DEFAULT_POLL_INTERVAL = 60  # seconds, default when no option is configured
 ANYLIST_MIN_POLL_INTERVAL = 60  # seconds

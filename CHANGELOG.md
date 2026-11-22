@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Keep shopping lists available for 15 minutes after the last successful
+  refresh while refreshes fail, so one slow or failed AnyList download does not
+  break automations and voice commands. Give shopping-list and favourite
+  downloads 60 seconds and the refresh 75 seconds, because AnyList sometimes
+  sends a changed long list at ~50 KB/s.
 - Keep the todo attributes that list every item (`items_signature_raw`,
   `items_by_category`, `items_by_category_signature`) out of the recorder. On
   long lists they exceeded its attribute size limit, which logged a warning and

@@ -31,6 +31,7 @@ from .const import (
     ANYLIST_DEFAULT_POLL_INTERVAL,
     ANYLIST_MAX_POLL_INTERVAL,
     ANYLIST_MIN_POLL_INTERVAL,
+    ANYLIST_LIST_DOWNLOAD_TIMEOUT,
     ANYLIST_REQUEST_TIMEOUT,
     CONF_MEAL_PLAN_CALENDAR,
     CONF_POLL_INTERVAL,
@@ -99,7 +100,7 @@ async def _async_validate_credentials(
         lists = await async_call_with_timeout(
             hass,
             client.get_lists,
-            timeout=ANYLIST_REQUEST_TIMEOUT,
+            timeout=ANYLIST_LIST_DOWNLOAD_TIMEOUT,
         )
     except (AnyListAuthError, AnyListHTTPError) as err:
         if isinstance(err, AnyListHTTPError) and err.status not in {400, 401, 403}:
@@ -334,7 +335,7 @@ class AnyListOptionsFlowHandler(config_entries.OptionsFlow):
                 lists = await async_call_with_timeout(
                     self.hass,
                     runtime_data.client.get_lists,
-                    timeout=ANYLIST_REQUEST_TIMEOUT,
+                    timeout=ANYLIST_LIST_DOWNLOAD_TIMEOUT,
                 )
                 self._available_lists = [(lst.id, lst.name) for lst in lists]
             except Exception as err:

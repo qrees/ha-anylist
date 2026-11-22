@@ -41,6 +41,7 @@ from .const import (
     ANYLIST_MAX_POLL_INTERVAL,
     ANYLIST_MIN_POLL_INTERVAL,
     ANYLIST_PHOTO_TIMEOUT,
+    ANYLIST_LIST_DOWNLOAD_TIMEOUT,
     ANYLIST_REFRESH_TIMEOUT,
     ANYLIST_REQUEST_TIMEOUT,
     ATTR_CATEGORY,
@@ -92,6 +93,7 @@ from .const import (
     SERVICE_UPDATE_RECIPE,
     SERVICE_UPDATE_ITEM,
 )
+from .coordinator import AnyListCoordinator
 from .entity import account_device_info, selected_list_ids
 from .recipe_search import (
     DEFAULT_SEARCH_LIMIT,
@@ -569,7 +571,7 @@ async def _async_resolve_list(
         lists = await async_call_with_timeout(
             hass,
             client.get_lists,
-            timeout=ANYLIST_REQUEST_TIMEOUT,
+            timeout=ANYLIST_LIST_DOWNLOAD_TIMEOUT,
         )
     except Exception as err:
         raise _translated_error("shopping_lists_load_failed", error=err) from err
@@ -606,7 +608,7 @@ async def _async_fetch_data_stages(
         lists = await async_call_with_timeout(
             hass,
             client.get_lists,
-            timeout=ANYLIST_REQUEST_TIMEOUT,
+            timeout=ANYLIST_LIST_DOWNLOAD_TIMEOUT,
         )
     except AnyListTimeoutError as err:
         raise UpdateFailed("Timed out fetching AnyList lists") from err
@@ -627,7 +629,7 @@ async def _async_fetch_data_stages(
         favourites = await async_call_with_timeout(
             hass,
             client.get_favourites,
-            timeout=ANYLIST_REQUEST_TIMEOUT,
+            timeout=ANYLIST_LIST_DOWNLOAD_TIMEOUT,
         )
     except AnyListTimeoutError as err:
         raise UpdateFailed("Timed out fetching AnyList favourites") from err
@@ -1257,7 +1259,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await _async_fetch_data(hass, client)
 
     poll_interval = get_poll_interval(entry)
-    coordinator = DataUpdateCoordinator(
+    coordinator = AnyListCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
